@@ -1,25 +1,25 @@
 
-pub mod bfops;
+pub mod ast;
+pub mod program;
+
+use crate::ast::AST;
+use crate::program::Program;
 
 fn main() {
-    println!(
-        "{:?}",
-        bfops::AST::new_from_string(&mut "+++++[<<>>[<<]>>],.,.,[---]--".chars())
-    );
+    let mut instruct = ast::AST::new_from_string(&mut "+[[->]-[-<]>-]>.>>>>.<<<<-.>>-.>.<<.>>>>-.<<<<<++.>>++.".chars());
+    run_ast(&mut instruct, &mut Program::new(Vec::new()));
 }
 
-fn run_ast(ast: &bfops::AST, prog: &mut Vec<i8>, loc: usize) {
-    let array_size = 1024;
-    let mut program = [i8; array_size];
-    let mut location: usize = (array_size as usize) / 2;
-
-    match ast {
-        AST::MOVE_LEFT => location += 1;
-        AST::MOVE_RIGHT => location -= 1;
-        AST::INCR => program[location] += 1;
-        AST::DECR => program[loaction] -= 1;
-        AST::OUTPUT => println!("{}", program[location]);
-        AST::INPUT => program[location] = 100;
-        AST::LOOP(ref loop_to_execute) => run_ast(loop_to_execute, prog, loc);
-    };
+fn run_ast(ast: &mut Vec<AST>, prog: &mut Program) {
+    for inst in ast {
+        match inst {
+            AST::MOVE_LEFT => prog.mv_l(),
+            AST::MOVE_RIGHT => prog.mv_r(),
+            AST::INCR => prog.incr(),
+            AST::DECR => prog.decr(),
+            AST::OUTPUT => prog.print(),
+            AST::INPUT => prog.set(),
+            AST::LOOP(ref mut loop_to_execute) => run_ast(&mut **loop_to_execute, prog),
+        };
+    }
 }
