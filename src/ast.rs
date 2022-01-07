@@ -15,7 +15,7 @@ pub enum Instruction {
 pub type Instructions = Vec<Instruction>;
 
 impl Parseable<Instructions> for &str {
-    fn parse_to_bf(&self) -> (Instructions, HashMap<usize, usize>) {
+    fn parse_to_bf(&self) -> Result<(Instructions, HashMap<usize, usize>), ParsingError> {
         let instuctions = self
             .chars()
             .filter_map(|c| match c {
@@ -40,24 +40,32 @@ impl Parseable<Instructions> for &str {
         let mut opening = Vec::new();
         for (i, c) in instuctions.iter().enumerate() {
             match c {
-                Instruction::STARTLOOP => {
-                    opening.push(i);
-                }
-                Instruction::ENDLOOP => {
-                    let begin = opening.pop().unwrap();
-                    map.insert(begin, i);
-                }
+                Instruction::STARTLOOP => opening.push(i),
+                Instruction::ENDLOOP => match opening.pop() {
+                    Some(begin) => {
+                        map.insert(begin, i);
+                    }
+                    None => return Err(ParsingError::TooManyRightBrackets),
+                },
                 _ => {}
             }
         }
-        if !opening.is_empty() {}
-
-        (instuctions, map)
+        if !opening.is_empty() {
+            Err(ParsingError::TooManyLeftBrackets)
+        } else {
+            Ok((instuctions, map))
+        }
     }
 }
 
+#[derive(Debug)]
+pub enum ParsingError {
+    TooManyRightBrackets,
+    TooManyLeftBrackets,
+}
+
 pub trait Parseable<T> {
-    fn parse_to_bf(&self) -> (Instructions, HashMap<usize, usize>);
+    fn parse_to_bf(&self) -> Result<(Instructions, HashMap<usize, usize>), ParsingError>;
 }
 
 #[derive(Debug)]
