@@ -1,6 +1,4 @@
-
 use std::char;
-use std::num::Wrapping;
 
 type CellSize = u32;
 
@@ -38,7 +36,10 @@ impl Program {
     }
 
     pub fn print(&self) {
-        println!("{}", char::from_u32(self.mem[self.loc] as u32).unwrap_or('!'));
+        println!(
+            "{}",
+            char::from_u32(self.mem[self.loc] as u32).unwrap_or('!')
+        );
     }
     pub fn set(&mut self) {
         self.mem[self.loc] = self.in_bytes.pop().unwrap();

@@ -1,38 +1,48 @@
-#[derive(Debug)]
-pub enum AST {
-    MOVE_LEFT,
-    MOVE_RIGHT,
+use log::{debug, error, info, trace, warn};
 
+#[derive(Debug)]
+pub enum Instruction {
+    MOVELEFT,
+    MOVERIGHT,
     INCR,
     DECR,
-
     INPUT,
     OUTPUT,
-
-    LOOP(Box<Vec<AST>>),
+    STARTLOOP,
+    ENDLOOP,
 }
 
-impl AST {
-    pub fn new_from_string(chars: &mut std::str::Chars) -> Vec<AST> {
-        let mut ast: Vec<AST> = Vec::new();
-        while let Some(ch) = chars.next() {
-            match ch {
-                '<' => ast.push(AST::MOVE_LEFT),
-                '>' => ast.push(AST::MOVE_RIGHT),
-                '+' => ast.push(AST::INCR),
-                '-' => ast.push(AST::DECR),
-                ',' => ast.push(AST::INPUT),
-                '.' => ast.push(AST::OUTPUT),
-                '[' => {
-                    ast.push(AST::LOOP(Box::new(AST::new_from_string(chars))));
-                }
-                ']' => {
-                    break;
-                }
-                _ => (),
-            };
-        }
+pub type Instructions = Vec<Instruction>;
 
-        ast
+impl Parseable<Instructions> for &str {
+    fn parse_to_bf(&self) -> Instructions {
+        self.chars()
+            .filter_map(|c| match c {
+                '<' => Some(Instruction::MOVELEFT),
+                '>' => Some(Instruction::MOVERIGHT),
+                '+' => Some(Instruction::INCR),
+                '-' => Some(Instruction::DECR),
+                ',' => Some(Instruction::INPUT),
+                '.' => Some(Instruction::OUTPUT),
+                '[' => Some(Instruction::STARTLOOP),
+                ']' => Some(Instruction::ENDLOOP),
+                _ => {
+                    log::warn!("Invalid instruction found: {}", c);
+                    log::warn!("Ignoring...");
+                    None
+                }
+            })
+            .collect::<Instructions>()
     }
+}
+
+pub struct RuntimeError;
+pub struct ParsingError;
+
+pub trait Parseable<T> {
+    fn parse_to_bf(&self) -> Instructions;
+}
+
+pub trait Runnable {
+    fn run(&self) -> Result<(), RuntimeError>;
 }

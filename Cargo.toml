@@ -5,3 +5,5 @@ authors = ["Derek Foundoulis <derek@foundoulis.io>"]
 edition = "2018"
 
 [dependencies]
+fern = { version = "0.5", features = ["colored"] }
+log = "0.4"
